@@ -122,7 +122,7 @@ class movinghome(mp_module.MPModule):
                 return
             if (data.startswith("$GPGGA") or data.startswith("$GNGGA,")):
                 try:
-                    msg = pynmea2.parse(data)
+                    msg = pynmea2.parse(data.split("*")[0], check=False)
                 except Exception as e:
                     print(f"Error parsing message ({data}): {e}")
                     return
@@ -145,6 +145,7 @@ class movinghome(mp_module.MPModule):
                     self.last_check = now
                     #check if we moved enough
                     self.dist = self.haversine(self.lon, self.lat, self.alt, self.lonh, self.lath, self.alth)
+                    print(f"movinghome: distance from home = {self.dist}, radius = {self.radius}")
                     if self.dist > self.radius:
                         if self.fresh == True:
                             self.say("GCS position set as home")    
@@ -156,6 +157,7 @@ class movinghome(mp_module.MPModule):
                             message2_enc = message2.encode(bytes)
                             self.master.mav.statustext_send(mavutil.mavlink.MAV_SEVERITY_NOTICE, message2)
                         self.console.writeln("home position updated")
+                        print("movinghome: updating home position")
 
                         self.master.mav.command_int_send(
                         self.settings.target_system, self.settings.target_component,
